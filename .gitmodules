@@ -1,0 +1,3 @@
+[submodule "Packages/com.gamelovers.mcp-unity"]
+	path = Packages/com.gamelovers.mcp-unity
+	url = https://github.com/Abbabon/mcp-unity.git
