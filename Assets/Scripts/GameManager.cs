@@ -2,6 +2,7 @@
 using System.Collections;
 using System;
 using System.Collections.Generic;
+using UnityEngine.InputSystem;
 
 public class GameManager : MonoBehaviour
 {
@@ -97,8 +98,16 @@ public class GameManager : MonoBehaviour
 
     private bool _startedOnce = false;
 
+    // The 'press any key' action. Input.anyKey has no Input System equivalent, so the asset binds
+    // <Keyboard>/anyKey, a mouse click, the gamepad buttons and a screen tap to one action instead.
+    private InputAction _start;
+
     private void Initialize()
     {
+        _start = InputSystem.actions
+                            .FindActionMap(Constants.PlayerActionMap, throwIfNotFound: true)
+                            .FindAction(Constants.StartAction, throwIfNotFound: true);
+
         //get hiscore from memory
         Reset();
         _difficultyIncreasePoints = new Dictionary<float, float>()
@@ -162,7 +171,7 @@ public class GameManager : MonoBehaviour
         else
         {
             //Get out of 'PRESS ANY KEY', but don't enable this mode again on Game Over screen;
-            if (!_startedOnce && Input.anyKey)
+            if (!_startedOnce && _start.WasPressedThisFrame())
             {
                 _startedOnce = true;
                 StartGame();

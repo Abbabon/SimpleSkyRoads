@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class ShipControls : MonoBehaviour
 {
@@ -16,37 +17,75 @@ public class ShipControls : MonoBehaviour
     private BoxCollider _shipBoxCollider;
     private float _shipHalfWidth;
 
+    //the on-screen buttons; only shown on a touch build, see Awake.
+    [SerializeField] private GameObject _mobileControls;
+
+    private InputAction _steer;
+    private InputAction _boost;
+
+    // Input.GetAxis used to smooth the raw key press for us (the old Horizontal axis ramped at
+    // 3 units/second, and snapped through zero when you reversed). The Input System hands us the
+    // raw -1/0/1 instead, so the same ramp is reproduced here - without it the ship jumps to full
+    // speed on the first frame and the lean animation looks like a flick.
+    private const float SteerRamp = 3f;
+    private float _smoothedSteer;
+
     private void Awake()
     {
         _shipTransform = GetComponent<Transform>();
         _shipBoxCollider = GetComponent<BoxCollider>();
         _shipHalfWidth = _shipBoxCollider.size.x / 2;
 
+        //the project-wide actions asset, which the Input System enables for us on entering play mode.
+        InputActionMap player = InputSystem.actions.FindActionMap(Constants.PlayerActionMap, throwIfNotFound: true);
+        _steer = player.FindAction(Constants.SteerAction, throwIfNotFound: true);
+        _boost = player.FindAction(Constants.BoostAction, throwIfNotFound: true);
+
         GameManager.OnSessionStarted += ResetLocation;
+
+#if UNITY_ANDROID || UNITY_IOS
+        _mobileControls.SetActive(true);
+#else
+        _mobileControls.SetActive(false);
+#endif
     }
 
     private void ResetLocation()
     {
         _shipTransform.position = _startingLocation.position;
+        _smoothedSteer = 0f;
     }
 
     void Update()
     {
         if (GameManager.Instance.GameInSession)
         {
-            float horizontalMovement = Input.GetAxis("Horizontal");
+            float horizontalMovement = SmoothSteer(_steer.ReadValue<float>());
             LocalMove(horizontalMovement, _shipSpeed);
             HorizontalLean(_shipTransform, horizontalMovement, 80, .05f);
 
-            if (Input.GetKeyDown(KeyCode.Space)){
+            if (_boost.WasPressedThisFrame()){
                 GameManager.Instance.IsPlayerBoosting = true;
                 SoundManager.Instance.PlaySoundEffect(SoundEffect.Boost);
             }
-            if (Input.GetKeyUp(KeyCode.Space))
+            if (_boost.WasReleasedThisFrame())
             {
                 GameManager.Instance.IsPlayerBoosting = false;
             }
         }
+    }
+
+    // 'snap': when the player steers the other way, drop straight to zero instead of coasting
+    // through the middle, then ramp up in the new direction.
+    private float SmoothSteer(float rawSteer)
+    {
+        if (rawSteer != 0f && Mathf.Sign(rawSteer) != Mathf.Sign(_smoothedSteer))
+        {
+            _smoothedSteer = 0f;
+        }
+
+        _smoothedSteer = Mathf.MoveTowards(_smoothedSteer, rawSteer, SteerRamp * Time.deltaTime);
+        return _smoothedSteer;
     }
 
     void LocalMove(float horizontalMovement, float speed)
