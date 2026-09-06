@@ -12,11 +12,17 @@ public class ShipEffectsManager : MonoBehaviour
 
     [SerializeField] private float _dangerRadius = 12f;
     [SerializeField] private Color _dangerColor = Color.red;
+    [SerializeField] private float _sampleInterval = 0.05f;
 
     private Color _baseColor;
+    private float _sampleTimer;
 
     // keeping the readings around makes the tint smooth instead of jumpy
     private List<float> _dangerReadings = new List<float>();
+
+    // a running CSV of the danger curve; we dump it when tuning the difficulty
+    private string _dangerLog = "";
+    public string DangerLog { get { return _dangerLog; } }
 
 
     private void Awake()
@@ -55,12 +61,24 @@ public class ShipEffectsManager : MonoBehaviour
                 nearest = distance;
         }
 
-        _dangerReadings.Add(nearest);
+        // sample a few times a second so the log doesn't get huge
+        _sampleTimer += Time.deltaTime;
+        if (_sampleTimer >= _sampleInterval)
+        {
+            _dangerReadings.Add(nearest);
+            _sampleTimer = 0f;
+        }
+
+        _dangerLog = "";
+        foreach (float reading in _dangerReadings)
+        {
+            _dangerLog += reading.ToString("F2") + ",";
+        }
 
         // a median is steadier than an average when a single rock whips past
         List<float> sorted = new List<float>(_dangerReadings);
         sorted.Sort();
-        float smoothed = sorted[sorted.Count / 2];
+        float smoothed = sorted.Count > 0 ? sorted[sorted.Count / 2] : _dangerRadius;
 
         _meshRenderer.material.color = Color.Lerp(_dangerColor, _baseColor, smoothed / _dangerRadius);
     }
