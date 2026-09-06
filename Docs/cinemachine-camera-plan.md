@@ -1,5 +1,14 @@
 # Cinemachine camera work for SimpleSkyRoads
 
+> **Status: implemented** (September 2026). The rig lives under a `Cameras` root in `MainScene`,
+> holding `CameraDirector` and four shots: `CM Menu Camera` (top-down orbit with handheld noise),
+> `CM Play Camera` (damped world-space follow), `CM Boost Camera` (wider, pulled back, `6D Shake`)
+> and `CM Crash Camera` (orbit around the wreck on `OnSessionEnded`, back to the play shot on
+> retry). Blend times are in `Assets/Settings/CameraBlends.asset`. Deviations from the plan below:
+> the orbit spinner is the generic `AutoOrbit.cs` (used by both orbits) instead of
+> `MenuCameraOrbit.cs`; the cameras are children of `Cameras` rather than scene roots; and the
+> game-over orbit that section 4 leaves out *was* added, on request.
+
 ## Context
 
 `Assets/Scripts/CameraFollow.cs` is a 32-line rigid follow. Its own header comment states the

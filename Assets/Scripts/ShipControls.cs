@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using Unity.Cinemachine;
 
 public class ShipControls : MonoBehaviour
 {
@@ -52,7 +53,11 @@ public class ShipControls : MonoBehaviour
 
     private void ResetLocation()
     {
+        // this is a teleport, not a move. the play camera is damped, so without this call it
+        // would smear across the jump instead of arriving with the ship.
+        Vector3 positionDelta = _startingLocation.position - _shipTransform.position;
         _shipTransform.position = _startingLocation.position;
+        CinemachineCore.OnTargetObjectWarped(_shipTransform, positionDelta);
         _smoothedSteer = 0f;
     }
 
