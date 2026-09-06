@@ -13287,6 +13287,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: MobileControls
       objectReference: {fileID: 0}
+    - target: {fileID: 3800610385018094260, guid: 88b0cae0a2dc646b7ae45cfb78b97989, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
