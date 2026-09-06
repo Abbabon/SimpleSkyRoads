@@ -60,12 +60,22 @@ public class ShipEffectsManager : MonoBehaviour
     {
         Asteroid[] asteroids = FindObjectsByType<Asteroid>(FindObjectsSortMode.None);
 
+        // sample a few times a second so the log doesn't get huge
+        _sampleTimer += Time.deltaTime;
+        bool sampleNow = _sampleTimer >= _sampleInterval;
+        if (sampleNow)
+            _sampleTimer = 0f;
+
         float nearest = _dangerRadius;
         foreach (Asteroid asteroid in asteroids)
         {
             float distance = Vector3.Distance(transform.position, asteroid.transform.position);
             if (distance < nearest)
                 nearest = distance;
+
+            // log every rock, not just the closest, so the curve tells the whole story
+            if (sampleNow)
+                _dangerReadings.Add(distance);
         }
 
         // redden the moment a rock is close, but ease back out so the tint
@@ -76,14 +86,6 @@ public class ShipEffectsManager : MonoBehaviour
                         : Mathf.MoveTowards(_dangerBlend, danger, _dangerFadeSpeed * Time.deltaTime);
 
         _meshRenderer.material.color = Color.Lerp(_dangerColor, _baseColor, _dangerBlend);
-
-        // sample a few times a second so the log doesn't get huge
-        _sampleTimer += Time.deltaTime;
-        if (_sampleTimer >= _sampleInterval)
-        {
-            _dangerReadings.Add(nearest);
-            _sampleTimer = 0f;
-        }
 
         _dangerLog = "";
         foreach (float reading in _dangerReadings)
