@@ -7,7 +7,8 @@
 > retry). Blend times are in `Assets/Settings/CameraBlends.asset`. Deviations from the plan below:
 > the orbit spinner is the generic `AutoOrbit.cs` (used by both orbits) instead of
 > `MenuCameraOrbit.cs`; the cameras are children of `Cameras` rather than scene roots; and the
-> game-over orbit that section 4 leaves out *was* added, on request.
+> game-over orbit that section 4 leaves out *was* added, on request. **How the finished rig
+> works, component by component, is in `cinemachine-camera-guide.md`.**
 
 ## Context
 
