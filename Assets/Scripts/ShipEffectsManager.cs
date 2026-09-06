@@ -10,14 +10,18 @@ public class ShipEffectsManager : MonoBehaviour
     [SerializeField] private BoxCollider _boxCollider;
     [SerializeField] private GameObject _shield;
 
-    [SerializeField] private float _dangerRadius = 20f;
+    [SerializeField] private float _dangerRadius = 10f;
     [SerializeField] private Color _dangerColor = Color.red;
+    [SerializeField] private float _dangerFadeSpeed = 1f;
     [SerializeField] private float _sampleInterval = 0.05f;
 
     private Color _baseColor;
+
+    // 1 is a clear road, 0 is a rock in our face
+    private float _dangerBlend = 1f;
     private float _sampleTimer;
 
-    // keeping the readings around makes the tint smooth instead of jumpy
+    // every reading we have taken, for the log and the session median
     private List<float> _dangerReadings = new List<float>();
 
     // a running CSV of the danger curve; we dump it when tuning the difficulty
@@ -64,7 +68,14 @@ public class ShipEffectsManager : MonoBehaviour
                 nearest = distance;
         }
 
-        _meshRenderer.material.color = Color.Lerp(_dangerColor, _baseColor, nearest / _dangerRadius);
+        // redden the moment a rock is close, but ease back out so the tint
+        // doesn't pop the instant one despawns behind us
+        float danger = nearest / _dangerRadius;
+        _dangerBlend = danger < _dangerBlend
+                        ? danger
+                        : Mathf.MoveTowards(_dangerBlend, danger, _dangerFadeSpeed * Time.deltaTime);
+
+        _meshRenderer.material.color = Color.Lerp(_dangerColor, _baseColor, _dangerBlend);
 
         // sample a few times a second so the log doesn't get huge
         _sampleTimer += Time.deltaTime;
@@ -110,6 +121,7 @@ public class ShipEffectsManager : MonoBehaviour
 
         _meshRenderer.enabled = true;
         _boxCollider.enabled = true;
+        _dangerBlend = 1f;
     }
 
     private void TurnOnShield(){
