@@ -10,7 +10,7 @@ public class ShipEffectsManager : MonoBehaviour
     [SerializeField] private BoxCollider _boxCollider;
     [SerializeField] private GameObject _shield;
 
-    [SerializeField] private float _dangerRadius = 12f;
+    [SerializeField] private float _dangerRadius = 20f;
     [SerializeField] private Color _dangerColor = Color.red;
     [SerializeField] private float _sampleInterval = 0.05f;
 
@@ -23,6 +23,9 @@ public class ShipEffectsManager : MonoBehaviour
     // a running CSV of the danger curve; we dump it when tuning the difficulty
     private string _dangerLog = "";
     public string DangerLog { get { return _dangerLog; } }
+
+    // serialized for visualization, not for tweaking
+    [SerializeField] private float _medianDanger;
 
 
     private void Awake()
@@ -61,6 +64,8 @@ public class ShipEffectsManager : MonoBehaviour
                 nearest = distance;
         }
 
+        _meshRenderer.material.color = Color.Lerp(_dangerColor, _baseColor, nearest / _dangerRadius);
+
         // sample a few times a second so the log doesn't get huge
         _sampleTimer += Time.deltaTime;
         if (_sampleTimer >= _sampleInterval)
@@ -78,9 +83,7 @@ public class ShipEffectsManager : MonoBehaviour
         // a median is steadier than an average when a single rock whips past
         List<float> sorted = new List<float>(_dangerReadings);
         sorted.Sort();
-        float smoothed = sorted.Count > 0 ? sorted[sorted.Count / 2] : _dangerRadius;
-
-        _meshRenderer.material.color = Color.Lerp(_dangerColor, _baseColor, smoothed / _dangerRadius);
+        _medianDanger = sorted.Count > 0 ? sorted[sorted.Count / 2] : _dangerRadius;
     }
 
     // there IS some DRY fault in the Hide / Reset methods, but I tried to encapsulate it and it was way uglier so I changed my mind.
